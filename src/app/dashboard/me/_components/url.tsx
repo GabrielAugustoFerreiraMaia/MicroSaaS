@@ -37,21 +37,17 @@ export function UrlPreview({ username: slug }: UrlPreviewProps) {
 
     if (!!username) {
         return (
-            <div className=" flex items-center justify-between flex-1 p-2 text-gray-100">
-
+            <div className="flex items-center justify-between flex-1 p-2 text-gray-100">
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-center gap-2">
                     <h3 className="font-bold text-lg">Sua URL:</h3>
-                    <Link href={`${process.env.NEXT_PUBLIC_HOST_URL}/creator/{username}`} target="_blank">
+
+                    <Link href={`${process.env.NEXT_PUBLIC_HOST_URL}/creator/${username}`} target="_blank">
                         {process.env.NEXT_PUBLIC_HOST_URL}/creator/{username}
                     </Link>
-
                 </div>
-                <Link href={`${process.env.NEXT_PUBLIC_HOST_URL}/creator/{username}`} target="_blank" className="bg-blue-500 px-4 py-1 rounded-md">
+                <Link href={`${process.env.NEXT_PUBLIC_HOST_URL}/creator/${username}`} target="_blank" className="bg-blue-500 px-4 py-1 rounded-md">
                     <Link2 className="h-5 w-5 text-white" />
                 </Link>
-
-
-
             </div>
         )
 

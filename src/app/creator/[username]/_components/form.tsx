@@ -10,6 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { createPayment } from "../_actions/create-payment";
+import { toast } from "sonner";
+import { getStripeJs } from "@/lib/stripe-ts";
 
 const formSchema = z.object({
     name: z.string().min(4, "O nome é obrigatório"),
@@ -21,7 +23,12 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-export function FormDonate() {
+interface FormDonateProps {
+    creatorId: string;
+    slug: string;
+}
+
+export function FormDonate({ slug, creatorId }: FormDonateProps) {
 
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
@@ -33,10 +40,35 @@ export function FormDonate() {
     })
 
 
-    function onSubmit(values: z.infer<typeof formSchema>) {
-        // Do something with the form values.
-        // ✅ This will be type-safe and validated.
-        console.log(values)
+    async function onSubmit(data: FormData) {
+
+        const priceInCents = Number(data.price) * 100; // valor em centavos
+
+        const checkout = await createPayment({
+            name: data.name,
+            message: data.message,
+            creatorId: creatorId,
+            slug: slug,
+            price: priceInCents
+        })
+
+        if (checkout.error) {
+            toast.error(checkout.error);
+            return;
+        }
+
+        if (checkout.data) {
+            const data = JSON.parse(checkout.data);
+
+            const stripe = await getStripeJs();
+
+            await stripe?.redirectToCheckout({
+                sessionId: data.id as string
+            })
+
+        }
+
+
     }
 
 
@@ -87,7 +119,10 @@ export function FormDonate() {
                             <FormLabel>Valor da doação</FormLabel>
                             <FormControl>
                                 <RadioGroup
-                                    onVolumeChange={field.onChange}
+                                    onValueChange={(value) => {
+
+                                        field.onChange(value); // Chama a função de alteração do campo
+                                    }}
                                     defaultValue={field.value}
                                     className="flex items-center gap-3"
                                 >
@@ -95,6 +130,7 @@ export function FormDonate() {
                                         <RadioGroupItem value={value} id={value} />
                                         <Label htmlFor={value}>R${value}</Label>
                                     </div>))}
+
                                 </RadioGroup>
                             </FormControl>
 
@@ -102,7 +138,11 @@ export function FormDonate() {
                         </FormItem>
                     )}
                 />
-                <Button type="submit">Fazer Doação</Button>
+                <Button type="submit"
+                    disabled={form.formState.isSubmitting}
+                >
+                    {form.formState.isSubmitting ? "Carregando..." : "Fazer Doação"}
+                </Button>
             </form>
         </Form>
     )
